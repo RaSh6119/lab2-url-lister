@@ -5,7 +5,6 @@ import re
 def extract_urls(line):
     pattern = r'href=["\']([^"\']*)["\']'   
     matches = re.finditer(pattern, line, re.IGNORECASE)
-
     urls = []
     for i in matches:
         url = i.group(1).strip()
