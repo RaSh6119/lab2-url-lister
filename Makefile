@@ -41,3 +41,26 @@ stream:
 	-reducer UrlReducer.py \
 	-file UrlMapper.py -file UrlReducer.py \
 	-input input -output stream-output
+## Hadoop Streaming on Dataproc
+prepare-dataproc:
+	-hdfs dfs -mkdir -p /user/$(USER)/input
+	curl -sS https://en.wikipedia.org/wiki/Apache_Hadoop > /tmp/input1.txt
+	hdfs dfs -put -f /tmp/input1.txt /user/$(USER)/input/file01
+	curl -sS https://en.wikipedia.org/wiki/MapReduce > /tmp/input2.txt
+	hdfs dfs -put -f /tmp/input2.txt /user/$(USER)/input/file02
+	@echo "HDFS input prepared under /user/$(USER)/input"
+
+stream-dataproc:
+	-hdfs dfs -rm -r -f /user/$(USER)/output
+	mapred streaming \
+	  -D mapreduce.job.name="UrlCount-Streaming" \
+	  -input /user/$(USER)/input \
+	  -output /user/$(USER)/output \
+	  -mapper "python3 UrlMapper.py" \
+	  -reducer "python3 UrlReducer.py" \
+	  -file UrlMapper.py \
+	  -file UrlReducer.py
+	@echo "Results are in HDFS: /user/$(USER)/output"
+
+clean-hdfs:
+	-hdfs dfs -rm -r -f /user/$(USER)/input /user/$(USER)/output
